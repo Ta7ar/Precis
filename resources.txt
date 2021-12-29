@@ -1,0 +1,5 @@
+https://towardsdatascience.com/tf-idf-for-document-ranking-from-scratch-in-python-on-real-world-dataset-796d339a4089
+https://www.researchgate.net/publication/220195824_Text_summarization_using_Latent_Semantic_Analysis
+https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html#sklearn.feature_extraction.text.TfidfVectorizer
+https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html
+http://lsa.colorado.edu/papers/dp1.LSAintro.pdf
