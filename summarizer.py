@@ -1,6 +1,9 @@
-from typing import List, Set, Tuple
-from collections import Counter
+from typing import List
 import numpy as np
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import TruncatedSVD
+
 import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
@@ -13,41 +16,6 @@ SYMBOLS = "!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n,"
 
 stop_words = set(stopwords.words("english"))
 stemmer = SnowballStemmer("english")
-
-def get_word_tokens(corpus):
-    word_tokens = set()
-    for doc in corpus:
-        word_tokens.update(doc)
-    return list(word_tokens)
-
-def generate_tf_idf_matrix(word_tokens,corpus):
-
-    m,n = len(word_tokens),len(corpus)
-    # Calculate df (Document Frequency) for each word token
-    # Defined as "Number of documents where the said word token exists"
-
-    doc_frequencies = {}
-    for word in word_tokens:
-        doc_frequencies[word] = 0
-        for doc in corpus:
-            if word in doc:
-                doc_frequencies[word] += 1
-    
-    tf_idf = np.zeros(shape=(m,n))
-
-    for doc_i in range(len(corpus)):
-        doc = corpus[doc_i]
-        word_counter = Counter(doc)
-        for word_i in range(len(word_tokens)):
-            word = word_tokens[word_i]
-            if word not in word_counter:
-                continue
-            df = doc_frequencies[word]
-            tf = word_counter[word] / len(doc)
-            idf = np.log(n/(1+df))
-            tf_idf[word_i,doc_i] = tf*idf
-
-    return tf_idf
 
 def process_document(doc: str):
     # Convert to all lowercase
@@ -68,40 +36,52 @@ def process_document(doc: str):
     # Stemming
     stemmed_tokens = [stemmer.stem(token) for token in tokens]
 
-    return stemmed_tokens
+    return " ".join(stemmed_tokens)
 
-def process_corpus(corpus: str) -> Tuple[List[str], List[List[str]]]:
-    '''
-        Processes corpus to form list of sets.
-
-        Parameters
-        ----------
-        corpus: str
-            Corpus/text to process.
-        
-        Returns
-        -------
-        documents_list: List[str]
-            Tokenized sentences of the corpus.
-        processed_corpus: List[List[str]]
-            List of lists representing word tokens for each tokenized sentence.
-    '''
-    documents_list = sent_tokenize(corpus)
-
-    processed_corpus = []
+def pre_process(documents_list: List[str]) -> List[str]:
+    corpus = []
     for document in documents_list:
-        processed_corpus.append(process_document(document))
+        corpus.append(process_document(document))
+    return corpus
 
-    return documents_list,processed_corpus
+def select_top_docs(vt: np.ndarray,n: int=5) -> List[int]:
+    '''
+    Select top n documents based on "cross method" as defined in
 
+    "Ozsoy, Makbule & Alpaslan, Ferda & Cicekli, Ilyas. (2011). 
+    Text summarization using Latent Semantic Analysis. J. 
+    Information Science. 37. 405-417. 10.1177/0165551511408848."
 
+    "https://www.researchgate.net/publication/220195824_Text_summarization_using_Latent_Semantic_Analysis"
+    '''
+    # Number of sentences to select cannot be more than the number of sentences available
+    n = min(n,vt.shape[1])
+    n = min(n,vt.shape[1] // 2)
+
+    for row in vt:
+        row_avg = np.mean(row)
+        row[row <= row_avg] = 0
+    length_scores: np.ndarray = vt.sum(axis=0)
+    selected_sent_indices = []
+    for _ in range(n):
+        sent_index = np.argmax(length_scores)
+        selected_sent_indices.append(sent_index)
+        length_scores[sent_index] = float('-inf')
+    return selected_sent_indices
+
+def gen_vt_matrix(corpus: List[str],k: int=2):
+    k = min(k,len(corpus)-1)
+    vectorizer = TfidfVectorizer()
+    tf_idf = vectorizer.fit_transform(corpus)
+    svd = TruncatedSVD(k)
+    svd.fit_transform(tf_idf.transpose())
+    vt = svd.components_
+    return vt
 
 def summarize(text: str) -> str:
-    doc_list,corpus = process_corpus(text)
-    word_tokens = get_word_tokens(corpus)
-    tf_idf_matrix = generate_tf_idf_matrix(word_tokens,corpus)
-    print(tf_idf_matrix)
-
-# A = np.random.normal(size=[3,2])
-# u,s,vh = np.linalg.svd(A,full_matrices=False)
-# A_prime = u @ np.diag(s) @ vh
+    documents_list = sent_tokenize(text)
+    corpus = pre_process(documents_list)
+    vt = gen_vt_matrix(corpus)
+    selected_sentences = select_top_docs(vt)
+    summary = [documents_list[i] for i in sorted(selected_sentences)]
+    return ''.join(summary)
