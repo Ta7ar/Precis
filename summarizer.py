@@ -69,7 +69,12 @@ def select_top_docs(vt: np.ndarray,n: int=5) -> List[int]:
         length_scores[sent_index] = float('-inf')
     return selected_sent_indices
 
-def gen_vt_matrix(corpus: List[str],k: int=2):
+def gen_vt_matrix(corpus: List[str],k: int=4):
+    '''
+    Computes TF-IDF matrix from the corpus on which Singular Vector Decomposition (SVD)
+    is performed the right (vt) matrix is returned. 
+    The returned vt vector is of shape (k x number of sentences)
+    '''
     k = min(k,len(corpus)-1)
     vectorizer = TfidfVectorizer()
     tf_idf = vectorizer.fit_transform(corpus)
