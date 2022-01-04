@@ -17,7 +17,7 @@ SYMBOLS = "!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n,"
 stop_words = set(stopwords.words("english"))
 stemmer = SnowballStemmer("english")
 
-def process_document(doc: str):
+def pre_process(doc: str):
     # Convert to all lowercase
     doc = doc.lower()
 
@@ -30,7 +30,7 @@ def process_document(doc: str):
 
     tokens = word_tokenize(doc)
 
-    # Remove stop words
+    # Removing stop words
     tokens = [token for token in tokens if token not in stop_words]
 
     # Stemming
@@ -38,13 +38,7 @@ def process_document(doc: str):
 
     return " ".join(stemmed_tokens)
 
-def pre_process(documents_list: List[str]) -> List[str]:
-    corpus = []
-    for document in documents_list:
-        corpus.append(process_document(document))
-    return corpus
-
-def select_top_docs(vt: np.ndarray,n: int=5) -> List[int]:
+def cross_method_selection(vt: np.ndarray,n: int=5) -> List[int]:
     '''
     Select top n documents based on "cross method" as defined in
 
@@ -56,7 +50,6 @@ def select_top_docs(vt: np.ndarray,n: int=5) -> List[int]:
     '''
     # Number of sentences to select cannot be more than the number of sentences available
     n = min(n,vt.shape[1])
-    n = min(n,vt.shape[1] // 2)
 
     for row in vt:
         row_avg = np.mean(row)
@@ -69,24 +62,17 @@ def select_top_docs(vt: np.ndarray,n: int=5) -> List[int]:
         length_scores[sent_index] = float('-inf')
     return selected_sent_indices
 
-def gen_vt_matrix(corpus: List[str],k: int=4):
-    '''
-    Computes TF-IDF matrix from the corpus on which Singular Vector Decomposition (SVD)
-    is performed the right (vt) matrix is returned. 
-    The returned vt vector is of shape (k x number of sentences)
-    '''
-    k = min(k,len(corpus)-1)
-    vectorizer = TfidfVectorizer()
+def summarize(text: str) -> str:
+    corpus = sent_tokenize(text)
+
+    vectorizer = TfidfVectorizer(preprocessor=pre_process)
     tf_idf = vectorizer.fit_transform(corpus)
-    svd = TruncatedSVD(k)
+
+    svd = TruncatedSVD(4)
     svd.fit_transform(tf_idf.transpose())
     vt = svd.components_
-    return vt
 
-def summarize(text: str) -> str:
-    documents_list = sent_tokenize(text)
-    corpus = pre_process(documents_list)
-    vt = gen_vt_matrix(corpus)
-    selected_sentences = select_top_docs(vt)
-    summary = [documents_list[i] for i in sorted(selected_sentences)]
+    selected_sentences = cross_method_selection(vt)
+
+    summary = [corpus[i] for i in sorted(selected_sentences)]
     return ''.join(summary)
