@@ -1,4 +1,4 @@
-from summarizer import summarize
+from webscraping.summarizer import summarize
 
 if __name__ == "__main__":
     sample_text_file = open('./sample_passage.txt','r')
