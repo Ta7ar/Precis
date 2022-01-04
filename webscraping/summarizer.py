@@ -38,7 +38,7 @@ def pre_process(doc: str):
 
     return " ".join(stemmed_tokens)
 
-def cross_method_selection(vt: np.ndarray,n: int=5) -> List[int]:
+def select_top_sentences(vt: np.ndarray,n: int=5) -> List[int]:
     '''
     Select top n documents based on "cross method" as defined in
 
@@ -68,11 +68,12 @@ def summarize(text: str) -> str:
     vectorizer = TfidfVectorizer(preprocessor=pre_process)
     tf_idf = vectorizer.fit_transform(corpus)
 
-    svd = TruncatedSVD(4)
+    n_components = min(4,len(corpus)-1)
+    svd = TruncatedSVD(n_components)
     svd.fit_transform(tf_idf.transpose())
     vt = svd.components_
 
-    selected_sentences = cross_method_selection(vt)
+    selected_sentences = select_top_sentences(vt)
 
     summary = [corpus[i] for i in sorted(selected_sentences)]
     return ''.join(summary)
