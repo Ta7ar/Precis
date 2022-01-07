@@ -38,7 +38,7 @@ def pre_process(doc: str):
 
     return " ".join(stemmed_tokens)
 
-def select_top_sentences(vt: np.ndarray,n: int=5) -> List[int]:
+def select_top_sentences(vt: np.ndarray) -> List[int]:
     '''
     Select top n documents based on "cross method" as defined in
 
@@ -49,7 +49,7 @@ def select_top_sentences(vt: np.ndarray,n: int=5) -> List[int]:
     "https://www.researchgate.net/publication/220195824_Text_summarization_using_Latent_Semantic_Analysis"
     '''
     # Number of sentences to select cannot be more than the number of sentences available
-    n = min(n,vt.shape[1])
+    n = min(5,vt.shape[1])
 
     for row in vt:
         row_avg = np.mean(row)
