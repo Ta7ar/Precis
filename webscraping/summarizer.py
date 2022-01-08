@@ -17,7 +17,7 @@ SYMBOLS = "!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n,"
 stop_words = set(stopwords.words("english"))
 stemmer = SnowballStemmer("english")
 
-def pre_process(doc: str):
+def _pre_process(doc: str):
     # Convert to all lowercase
     doc = doc.lower()
 
@@ -38,7 +38,7 @@ def pre_process(doc: str):
 
     return " ".join(stemmed_tokens)
 
-def select_top_sentences(vt: np.ndarray) -> List[int]:
+def _select_top_sentences(vt: np.ndarray) -> List[int]:
     '''
     Select top n documents based on "cross method" as defined in
 
@@ -65,7 +65,7 @@ def select_top_sentences(vt: np.ndarray) -> List[int]:
 def summarize(text: str) -> str:
     corpus = sent_tokenize(text)
 
-    vectorizer = TfidfVectorizer(preprocessor=pre_process)
+    vectorizer = TfidfVectorizer(preprocessor=_pre_process)
     tf_idf = vectorizer.fit_transform(corpus)
 
     n_components = min(4,len(corpus)-1)
@@ -73,7 +73,7 @@ def summarize(text: str) -> str:
     svd.fit_transform(tf_idf.transpose())
     vt = svd.components_
 
-    selected_sentences = select_top_sentences(vt)
+    selected_sentences = _select_top_sentences(vt)
 
     summary = [corpus[i] for i in sorted(selected_sentences)]
     return ''.join(summary)
