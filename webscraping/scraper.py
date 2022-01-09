@@ -40,22 +40,44 @@ class CNBC(Scraper):
     def _parse_link(self, link) -> Article:
         soup = Scraper._generate_soup(link)
 
-        article_title = soup.title.get_text()
+        title = soup.title.get_text()
 
-        article_publish_date = soup.find('time',attrs={'itemprop':'datePublished'}).attrs['datetime']
+        publish_date = soup.find('time',attrs={'itemprop':'datePublished'}).attrs['datetime']
 
         article_p_tags = soup.find('div',attrs={'class':'ArticleBody-articleBody'}).find_all('p')
-        article_text = ''.join([tag.get_text() for tag in article_p_tags])
+        body = ''.join([tag.get_text() for tag in article_p_tags])
 
-        return Article(article_title,article_text,"CNBC",article_publish_date,link)
+        return Article(title,body,"CNBC",publish_date,link)
+
+class CBSNews(Scraper):
+    def _get_links(self):
+        a_tags = self.soup.find_all('a')
+        links = [tag.attrs['href'] for tag in a_tags if "https://www.cbsnews.com/news" in tag.attrs['href']]
+        return links
+
+    def _parse_link(self, link) -> Article:
+        soup = Scraper._generate_soup(link)
+        content_body = soup.find('section',attrs={'class':'content__body'})
+        contributed_by_ap_tag = content_body.find('em')
+        app_upsell_tag = content_body.find('p',attrs={'class': 'item__dek'})
+
+        if contributed_by_ap_tag is not None:
+            contributed_by_ap_tag.decompose()
+        if app_upsell_tag is not None:
+            app_upsell_tag.decompose()
+        
+        body = ''.join([tag.get_text() for tag in content_body.find_all('p')])
+        title = soup.find('h1',attrs={'class':'content__title'}).get_text()
+        publish_date = soup.find('header', attrs={'class':'content__header'}).find('time').attrs['datetime']
+
+        return Article(title,body,"CBS News",publish_date, link)
+        
         
 def run():
-    scrapers = [CNBC("https://www.cnbc.com/")]
+    scrapers = [CNBC("https://www.cnbc.com/"), CBSNews("https://www.cbsnews.com")]
     articles = []
     for scraper in scrapers:
         articles.extend(scraper())
     return articles
 
-print(run()[0])
-
-
+print(run())
