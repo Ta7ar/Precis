@@ -1,4 +1,4 @@
-from summarizer import summarize
+from webscraping.summarizer import summarize
 
 # Dummy class
 # TODO: Replace with db model later

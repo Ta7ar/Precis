@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from urllib import request
-from article import Article
+from webscraping.article import Article
 
 class Scraper:
     def __init__(self,url) -> None:
@@ -58,6 +58,7 @@ class CBSNews(Scraper):
     def _parse_link(self, link) -> Article:
         soup = Scraper._generate_soup(link)
         content_body = soup.find('section',attrs={'class':'content__body'})
+
         contributed_by_ap_tag = content_body.find('em')
         app_upsell_tag = content_body.find('p',attrs={'class': 'item__dek'})
 
@@ -79,5 +80,3 @@ def run():
     for scraper in scrapers:
         articles.extend(scraper())
     return articles
-
-print(run())

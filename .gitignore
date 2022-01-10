@@ -1,3 +1,4 @@
 /env
 /__pycache__
 /webscraping/__pycache__
+/.env
