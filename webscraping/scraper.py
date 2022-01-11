@@ -1,9 +1,11 @@
 from bs4 import BeautifulSoup
 from urllib import request
 from webscraping.article import Article
+from db import get_article_links_by_publisher, save_articles
 
 class Scraper:
-    def __init__(self,url) -> None:
+    def __init__(self,publisher,url) -> None:
+        self.publisher = publisher
         self.soup = Scraper._generate_soup(url)
     
     @staticmethod
@@ -19,7 +21,16 @@ class Scraper:
         raise NotImplementedError()
 
     def __call__(self):
+
+        # Get list of previously parsed articles already present in the db
+        saved_links = get_article_links_by_publisher(self.publisher)
+
+        # Get list of articles in the frontpage
         links = self._get_links()
+
+        # Parse links that are not already in the db
+        links = [link for link in links if link not in saved_links]
+
         articles = []
         for link in links:
             try:
@@ -27,7 +38,8 @@ class Scraper:
             except Exception as e:
                 print("Could not parse link: ",link)
                 print(e)
-
+                
+        save_articles(articles)
         return articles
 
 class CNBC(Scraper):
@@ -47,7 +59,7 @@ class CNBC(Scraper):
         article_p_tags = soup.find('div',attrs={'class':'ArticleBody-articleBody'}).find_all('p')
         body = ''.join([tag.get_text() for tag in article_p_tags])
 
-        return Article(title,body,"CNBC",publish_date,link)
+        return Article(title,body,self.publisher,publish_date,link)
 
 class CBSNews(Scraper):
     def _get_links(self):
@@ -71,11 +83,12 @@ class CBSNews(Scraper):
         title = soup.find('h1',attrs={'class':'content__title'}).get_text()
         publish_date = soup.find('header', attrs={'class':'content__header'}).find('time').attrs['datetime']
 
-        return Article(title,body,"CBS News",publish_date, link)
+        return Article(title,body,self.publisher,publish_date, link)
         
         
 def run():
-    scrapers = [CNBC("https://www.cnbc.com/"), CBSNews("https://www.cbsnews.com")]
+    # scrapers = [CNBC("CNBC","https://www.cnbc.com/"), CBSNews("CBS", "https://www.cbsnews.com")]
+    scrapers = [CNBC("CNBC","https://www.cnbc.com/")]
     articles = []
     for scraper in scrapers:
         articles.extend(scraper())

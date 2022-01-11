@@ -15,4 +15,15 @@ def get_article_links_by_publisher(publisher):
     links = set(link['link'] for link in links)
     return links
 
+def save_articles(articles):
+    if len(articles) == 0:
+        return
+    articles = [article.__dict__ for article in articles]
+    article_collection.insert_many(articles)
+
+def get_all_articles():
+    articles = article_collection.find({},{'_id':False, '_v':False})
+    return list(articles)
+    
+
 print(get_article_links_by_publisher("CNBC"))

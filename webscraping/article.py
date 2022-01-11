@@ -1,7 +1,5 @@
 from webscraping.summarizer import summarize
 
-# Dummy class
-# TODO: Replace with db model later
 class Article:
     def __init__(self,title,body,publisher,publish_date,link) -> None:
         self.title = title
