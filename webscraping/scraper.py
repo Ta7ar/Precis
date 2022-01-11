@@ -14,42 +14,20 @@ class Scraper:
         soup = BeautifulSoup(source,'lxml')
         return soup
 
-    def _get_links(self):
+    def get_links(self):
         raise NotImplementedError()
 
-    def _parse_link(self,link) -> Article:
+    def parse_link(self,link) -> Article:
         raise NotImplementedError()
-
-    def __call__(self):
-
-        # Get list of previously parsed articles already present in the db
-        saved_links = get_article_links_by_publisher(self.publisher)
-
-        # Get list of articles in the frontpage
-        links = self._get_links()
-
-        # Parse links that are not already in the db
-        links = [link for link in links if link not in saved_links]
-
-        articles = []
-        for link in links:
-            try:
-                articles.append(self._parse_link(link))
-            except Exception as e:
-                print("Could not parse link: ",link)
-                print(e)
-                
-        save_articles(articles)
-        return articles
 
 class CNBC(Scraper):
-    def _get_links(self):
+    def get_links(self):
         thumbnail_tags = self.soup.find('div',attrs={'id':'homepage-riverPlus'}).find_all('div',attrs={'class':'RiverHeadline-headline RiverHeadline-hasThumbnail'})
         links = [thumbnail.find('a').attrs['href'] for thumbnail in thumbnail_tags]
         links = [link for link in links if link != '/pro/']
         return links
 
-    def _parse_link(self, link) -> Article:
+    def parse_link(self, link) -> Article:
         soup = Scraper._generate_soup(link)
 
         title = soup.title.get_text()
@@ -62,12 +40,12 @@ class CNBC(Scraper):
         return Article(title,body,self.publisher,publish_date,link)
 
 class CBSNews(Scraper):
-    def _get_links(self):
+    def get_links(self):
         a_tags = self.soup.find_all('a')
         links = [tag.attrs['href'] for tag in a_tags if "https://www.cbsnews.com/news" in tag.attrs['href']]
         return links
 
-    def _parse_link(self, link) -> Article:
+    def parse_link(self, link) -> Article:
         soup = Scraper._generate_soup(link)
         content_body = soup.find('section',attrs={'class':'content__body'})
 
@@ -89,7 +67,22 @@ class CBSNews(Scraper):
 def run():
     # scrapers = [CNBC("CNBC","https://www.cnbc.com/"), CBSNews("CBS", "https://www.cbsnews.com")]
     scrapers = [CNBC("CNBC","https://www.cnbc.com/")]
-    articles = []
     for scraper in scrapers:
-        articles.extend(scraper())
-    return articles
+        # Get list of previously parsed articles already present in the db
+        saved_links = get_article_links_by_publisher(scraper.publisher)
+
+        # Get list of articles in the frontpage
+        links = scraper.get_links()
+
+        # Parse links that are not already in the db
+        links = [link for link in links if link not in saved_links]
+
+        articles = []
+        for link in links:
+            try:
+                articles.append(scraper.parse_link(link))
+            except Exception as e:
+                print("Could not parse link: ",link)
+                print(e)
+
+        save_articles(articles)
