@@ -11,8 +11,6 @@ class Article:
         return f'''
         {self.title} | {self.publisher}
 
-        on {self.publish_date}
-
         {self.body}
 
         Read more here: {self.link}
