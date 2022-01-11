@@ -1,5 +1,4 @@
 from flask import Flask, jsonify
-import json
 from webscraping import scraper
 from db import get_all_articles
 

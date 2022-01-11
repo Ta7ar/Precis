@@ -1,6 +1,7 @@
 import pymongo
 from dotenv import load_dotenv
 import os
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -25,5 +26,10 @@ def get_all_articles():
     articles = article_collection.find({},{'_id':False, '_v':False})
     return list(articles)
     
-
-print(get_article_links_by_publisher("CNBC"))
+def get_last_insert_time() -> datetime | None:
+    record = article_collection.find_one({},sort=[('_id', pymongo.DESCENDING)])
+    if record is None:
+        return None
+    time = record.get('_id').generation_time
+    time.replace(tzinfo=timezone.utc)
+    return time

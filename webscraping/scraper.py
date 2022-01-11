@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
 from urllib import request
 from webscraping.article import Article
-from db import get_article_links_by_publisher, save_articles
+from db import save_articles, get_last_insert_time, get_article_links_by_publisher
+from datetime import datetime, timezone
 
 class Scraper:
     def __init__(self,url) -> None:
@@ -65,13 +66,18 @@ def run():
     # scrapers = [CNBC("CNBC","https://www.cnbc.com/"), CBSNews("CBS", "https://www.cbsnews.com")]
     scrapers = [CNBC("https://www.cnbc.com/")]
     for scraper in scrapers:
-        # Get list of previously parsed articles already present in the db
+        articles_publish_time = get_last_insert_time()
+        if articles_publish_time is not None:
+            time_elapsed_last_insert = datetime.now(timezone.utc) - articles_publish_time
+            time_elapsed_last_insert = time_elapsed_last_insert.total_seconds() / 3600
+            if time_elapsed_last_insert < 6:
+                # Scrape articles once every 6 hours
+                # Subject to change
+                return
+        
+        # Scrape articles that have not been scraped already
         saved_links = get_article_links_by_publisher(scraper.publisher)
-
-        # Get list of articles in the frontpage
         links = scraper.get_links()
-
-        # Parse links that are not already in the db
         links = [link for link in links if link not in saved_links]
 
         articles = []
