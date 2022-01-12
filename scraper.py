@@ -1,8 +1,6 @@
 from bs4 import BeautifulSoup
 from urllib import request
-from webscraping.article import Article
-from db import save_articles, get_last_insert_time, get_article_links_by_publisher
-from datetime import datetime, timezone
+from article import Article
 
 class Scraper:
     def __init__(self,url) -> None:
@@ -38,7 +36,7 @@ class CNBC(Scraper):
 
         return Article(title,body,self.publisher,link)
 
-class CBSNews(Scraper):
+class CBS(Scraper):
     def get_links(self):
         a_tags = self.homepage.find_all('a')
         links = [tag.attrs['href'] for tag in a_tags if "https://www.cbsnews.com/news" in tag.attrs['href']]
@@ -60,34 +58,3 @@ class CBSNews(Scraper):
         title = soup.find('h1',attrs={'class':'content__title'}).get_text()
 
         return Article(title,body,self.publisher,link)
-        
-        
-def run():
-    # scrapers = [CNBC("CNBC","https://www.cnbc.com/"), CBSNews("CBS", "https://www.cbsnews.com")]
-    scrapers = [CNBC("https://www.cnbc.com/")]
-
-    articles_publish_time = get_last_insert_time()
-    if articles_publish_time is not None:
-        time_elapsed_last_insert = datetime.now(timezone.utc) - articles_publish_time
-        time_elapsed_last_insert = time_elapsed_last_insert.total_seconds() / 3600
-        if time_elapsed_last_insert < 6:
-            # Scrape articles once every 6 hours
-            # Subject to change
-            return
-
-    for scraper in scrapers:
-        
-        # Scrape articles that have not been scraped already
-        saved_links = get_article_links_by_publisher(scraper.publisher)
-        links = scraper.get_links()
-        links = [link for link in links if link not in saved_links]
-
-        articles = []
-        for link in links:
-            try:
-                articles.append(scraper.parse_link(link))
-            except Exception as e:
-                print("Could not parse link: ",link)
-                print(e)
-
-        save_articles(articles)
