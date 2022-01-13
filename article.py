@@ -1,7 +1,7 @@
 import pymongo
 from dotenv import load_dotenv
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from typing import List
 from summarizer import summarize
 
@@ -48,13 +48,20 @@ class Article:
         return list(articles)
         
     @staticmethod
-    def get_last_insert_time() -> datetime | None:
+    def get_last_insert_et_and_date(current_datetime):
         record = article_collection.find_one({},sort=[('_id', pymongo.DESCENDING)])
         if record is None:
-            return None
-        time = record.get('_id').generation_time
-        time.replace(tzinfo=timezone.utc)
-        return time
+            return None, None
+
+        last_insert_time = record.get('_id').generation_time
+        last_insert_time.replace(tzinfo=timezone.utc)
+
+        elapsed_time = current_datetime - last_insert_time
+        elapsed_time = elapsed_time.total_seconds() / 3600
+
+        last_insert_date = last_insert_time.date()
+
+        return elapsed_time, last_insert_date
 
     @staticmethod
     def delete_all():
