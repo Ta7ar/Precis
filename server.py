@@ -1,12 +1,12 @@
 from flask import Flask, jsonify
 from article import Article
-from scraper import scrape_articles
+import scraper
 
 app = Flask(__name__)
 
 @app.route("/")
 def get_articles():
-    scrape_articles()
+    scraper.scrape_articles()
     articles = Article.get_all()
     return jsonify(articles)
 

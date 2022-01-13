@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 from datetime import timezone
 from typing import List
-from summarizer import summarize
+import summarizer
 
 load_dotenv()
 
@@ -16,7 +16,7 @@ article_collection = db.get_collection('articles')
 class Article:
     def __init__(self,title,body,publisher,link) -> None:
         self.title = title
-        self.body = summarize(body)
+        self.body = summarizer.summarize(body)
         self.publisher = publisher
         self.link = link
     
