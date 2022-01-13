@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from urllib import request
 from article import Article
+from datetime import datetime, timezone
 
 class Scraper:
     def __init__(self,url) -> None:
@@ -58,3 +59,33 @@ class CBS(Scraper):
         title = soup.find('h1',attrs={'class':'content__title'}).get_text()
 
         return Article(title,body,self.publisher,link)
+
+def scrape_articles():
+    # scrapers = [CNBC("CNBC","https://www.cnbc.com/"), CBSNews("CBS", "https://www.cbsnews.com")]
+    scrapers = [CNBC("https://www.cnbc.com/")]
+
+    articles_publish_time = Article.get_last_insert_time()
+    if articles_publish_time is not None:
+        time_elapsed_last_insert = datetime.now(timezone.utc) - articles_publish_time
+        time_elapsed_last_insert = time_elapsed_last_insert.total_seconds() / 3600
+        if time_elapsed_last_insert < 6:
+            # Scrape articles once every 6 hours
+            # Subject to change
+            return
+
+    for scraper in scrapers:
+        
+        # Scrape articles that have not been scraped already
+        saved_links = Article.get_links_by_publisher(scraper.publisher)
+        links = scraper.get_links()
+        links = [link for link in links if link not in saved_links]
+
+        articles = []
+        for link in links:
+            try:
+                articles.append(scraper.parse_link(link))
+            except Exception as e:
+                print("Could not parse link: ",link)
+                print(e)
+
+        Article.save(articles)
