@@ -55,3 +55,7 @@ class Article:
         time = record.get('_id').generation_time
         time.replace(tzinfo=timezone.utc)
         return time
+
+    @staticmethod
+    def delete_all():
+        article_collection.delete_many({})
