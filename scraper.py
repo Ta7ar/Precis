@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from urllib import request
 from article import Article
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 
 class Scraper:
     def __init__(self,url) -> None:
@@ -85,6 +85,7 @@ def scrape_articles():
         articles = []
         for link in links:
             try:
+                print("Parsing link: ",link)
                 articles.append(scraper.parse_link(link))
             except Exception as e:
                 print("Could not parse link: ",link)

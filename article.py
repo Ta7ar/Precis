@@ -1,7 +1,7 @@
 import pymongo
 from dotenv import load_dotenv
 import os
-from datetime import datetime, timezone, date
+from datetime import timezone
 from typing import List
 from summarizer import summarize
 
