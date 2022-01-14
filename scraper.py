@@ -78,6 +78,7 @@ class CBS(Scraper):
         return Article(title,body,self.publisher,link)
 
 def scrape_articles():
+    # No db queries are called from Scraper class/superclasses as a design choice
     scrapers = [CNBC("https://www.cnbc.com/"), CBS("https://www.cbsnews.com")]
 
     current_datetime = datetime.now(timezone.utc)
@@ -100,6 +101,8 @@ def scrape_articles():
 
     '''
     MULTIPROCESS IMPLEMENTATION
+
+    Not using it for the time being cause it does not provide a significant performance boost
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
         results = []
