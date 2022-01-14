@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 class Scraper:
     def __init__(self,url) -> None:
         self.publisher = self.__class__.__name__
-        self.homepage = Scraper._generate_soup(url)
+        self.url = url
     
     @staticmethod
     def _generate_soup(url):
@@ -20,9 +20,25 @@ class Scraper:
     def parse_link(self,link) -> Article:
         raise NotImplementedError()
 
+    def run(self, saved_links):
+        links = self.get_links()
+        links = [link for link in links if link not in saved_links]
+        links = links[:15] if len(links) > 15 else links
+
+        articles = []
+        for link in links:
+            try:
+                print("Parsing link: ",link)
+                articles.append(self.parse_link(link))
+            except Exception as e:
+                print("Could not parse link: ",link)
+                print(e)
+        return articles
+
 class CNBC(Scraper):
     def get_links(self):
-        thumbnail_tags = self.homepage.find('div',attrs={'id':'homepage-riverPlus'}).find_all('div',attrs={'class':'RiverHeadline-headline RiverHeadline-hasThumbnail'})
+        homepage = Scraper._generate_soup(self.url)
+        thumbnail_tags = homepage.find('div',attrs={'id':'homepage-riverPlus'}).find_all('div',attrs={'class':'RiverHeadline-headline RiverHeadline-hasThumbnail'})
         links = [thumbnail.find('a').attrs['href'] for thumbnail in thumbnail_tags]
         links = [link for link in links if link != '/pro/']
         return links
@@ -39,7 +55,8 @@ class CNBC(Scraper):
 
 class CBS(Scraper):
     def get_links(self):
-        a_tags = self.homepage.find_all('a')
+        homepage = Scraper._generate_soup(self.url)
+        a_tags = homepage.find_all('a')
         links = [tag.attrs['href'] for tag in a_tags if "https://www.cbsnews.com/news" in tag.attrs['href']]
         return links
 
@@ -61,8 +78,7 @@ class CBS(Scraper):
         return Article(title,body,self.publisher,link)
 
 def scrape_articles():
-    # scrapers = [CNBC("CNBC","https://www.cnbc.com/"), CBSNews("CBS", "https://www.cbsnews.com")]
-    scrapers = [CNBC("https://www.cnbc.com/")]
+    scrapers = [CNBC("https://www.cnbc.com/"), CBS("https://www.cbsnews.com")]
 
     current_datetime = datetime.now(timezone.utc)
     elapsed_time, last_insert_date = Article.get_last_insert_et_and_date(current_datetime)
@@ -74,21 +90,25 @@ def scrape_articles():
     elif elapsed_time is not None and elapsed_time < 6:
         # Scrape no more than once every 6 hours
         return
-
+    
+    articles = []
     for scraper in scrapers:
-        
-        # Scrape articles that have not been scraped already
         saved_links = Article.get_links_by_publisher(scraper.publisher)
-        links = scraper.get_links()
-        links = [link for link in links if link not in saved_links]
+        articles.extend(scraper.run(saved_links))
+    
+    Article.save(articles)
 
+    '''
+    MULTIPROCESS IMPLEMENTATION
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        results = []
         articles = []
-        for link in links:
-            try:
-                print("Parsing link: ",link)
-                articles.append(scraper.parse_link(link))
-            except Exception as e:
-                print("Could not parse link: ",link)
-                print(e)
-
+        for scraper in scrapers:
+            saved_links = Article.get_links_by_publisher(scraper.publisher)
+            future = executor.submit(scraper.run,saved_links)
+            results.append(future)
+        for future in concurrent.futures.as_completed(results):
+            articles.extend(future.result())
         Article.save(articles)
+    '''
