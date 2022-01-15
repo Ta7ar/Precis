@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from urllib import request
-from article import Article
+import article
 from datetime import datetime, timezone
 
 class Scraper:
@@ -17,7 +17,7 @@ class Scraper:
     def get_links(self):
         raise NotImplementedError()
 
-    def parse_link(self,link) -> Article:
+    def parse_link(self,link) -> article.Article:
         raise NotImplementedError()
 
     def run(self, saved_links):
@@ -43,7 +43,7 @@ class CNBC(Scraper):
         links = [link for link in links if link != '/pro/']
         return links
 
-    def parse_link(self, link) -> Article:
+    def parse_link(self, link):
         soup = Scraper._generate_soup(link)
 
         title = soup.title.get_text()
@@ -51,7 +51,7 @@ class CNBC(Scraper):
         article_p_tags = soup.find('div',attrs={'class':'ArticleBody-articleBody'}).find_all('p')
         body = ''.join([tag.get_text() for tag in article_p_tags])
 
-        return Article(title,body,self.publisher,link)
+        return article.Article(title,body,self.publisher,link)
 
 class CBS(Scraper):
     def get_links(self):
@@ -60,7 +60,7 @@ class CBS(Scraper):
         links = [tag.attrs['href'] for tag in a_tags if "https://www.cbsnews.com/news" in tag.attrs['href']]
         return links
 
-    def parse_link(self, link) -> Article:
+    def parse_link(self, link):
         soup = Scraper._generate_soup(link)
         content_body = soup.find('section',attrs={'class':'content__body'})
 
@@ -75,18 +75,18 @@ class CBS(Scraper):
         body = ''.join([tag.get_text() for tag in content_body.find_all('p')])
         title = soup.find('h1',attrs={'class':'content__title'}).get_text()
 
-        return Article(title,body,self.publisher,link)
+        return article.Article(title,body,self.publisher,link)
 
 def scrape_articles():
     # No db queries are called from Scraper class/superclasses as a design choice
     scrapers = [CNBC("https://www.cnbc.com/"), CBS("https://www.cbsnews.com")]
 
     current_datetime = datetime.now(timezone.utc)
-    elapsed_time, last_insert_date = Article.get_last_insert_et_and_date(current_datetime)
+    elapsed_time, last_insert_date = article.get_last_insert_et_and_date(current_datetime)
 
     if last_insert_date is None or last_insert_date < current_datetime.date():
         # If articles were scraped on a previous day, delete all old articles
-        Article.delete_all()
+        article.delete_all()
 
     elif elapsed_time is not None and elapsed_time < 6:
         # Scrape no more than once every 6 hours
@@ -94,10 +94,10 @@ def scrape_articles():
     
     articles = []
     for scraper in scrapers:
-        saved_links = Article.get_links_by_publisher(scraper.publisher)
+        saved_links = article.get_links_by_publisher(scraper.publisher)
         articles.extend(scraper.run(saved_links))
     
-    Article.save(articles)
+    article.save(articles)
 
     '''
     MULTIPROCESS IMPLEMENTATION
