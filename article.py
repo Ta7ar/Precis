@@ -29,61 +29,55 @@ class Article:
         Read more here: {self.link}
         '''
 
-    @staticmethod
-    def get_links_by_publisher(publisher):
-        links = article_collection.find({'publisher':publisher}, {'_id':False, 'link': True})
-        links = set(link['link'] for link in links)
-        return links
+def get_links_by_publisher(publisher):
+    links = article_collection.find({'publisher':publisher}, {'_id':False, 'link': True})
+    links = set(link['link'] for link in links)
+    return links
 
-    @staticmethod
-    def save(articles: List['Article']):
-        if len(articles) == 0:
-            return
-        articles = [article.__dict__ for article in articles]
-        article_collection.insert_many(articles)
+def save(articles: List['Article']):
+    if len(articles) == 0:
+        return
+    articles = [article.__dict__ for article in articles]
+    article_collection.insert_many(articles)
 
-    @staticmethod
-    def get_all():
-        articles = article_collection.find({},{'_id':False, '_v':False}).sort('_id',pymongo.ASCENDING)
-        return list(articles)
+def get_all():
+    articles = article_collection.find({},{'_id':False, '_v':False}).sort('_id',pymongo.ASCENDING)
+    return list(articles)
+
+def get(limit, offset):
+    article_docs_count = article_collection.count_documents({})
+    if offset > article_docs_count:
+        return None
+    starting_id = article_collection.find().sort('_id', pymongo.ASCENDING)[offset]['_id']
+    articles = article_collection.find({'_id': {'$gte': starting_id}}, {'_id': False}).sort('_id', pymongo.ASCENDING).limit(limit)
+
+    prev_url = next_url = None
+
+    if offset != 0:
+        prev_url = f'/api?limit={limit}&offset={max(0,offset-limit)}'
+    if offset + limit <= article_docs_count:
+        next_url = f'/api?limit={limit}&offset={offset+limit}'
+
+    return {
+        'prev_url': prev_url,
+        'next_url': next_url,
+        'articles': list(articles)
+    }
     
-    @staticmethod
-    def get(limit, offset):
-        article_docs_count = article_collection.count_documents({})
-        if offset > article_docs_count:
-            return None
-        starting_id = article_collection.find().sort('_id', pymongo.ASCENDING)[offset]['_id']
-        articles = article_collection.find({'_id': {'$gte': starting_id}}, {'_id': False}).sort('_id', pymongo.ASCENDING).limit(limit)
+def get_last_insert_et_and_date(current_datetime):
+    record = article_collection.find_one({},sort=[('_id', pymongo.DESCENDING)])
+    if record is None:
+        return None, None
 
-        prev_url = next_url = None
+    last_insert_time = record.get('_id').generation_time
+    last_insert_time.replace(tzinfo=timezone.utc)
 
-        if offset != 0:
-            prev_url = f'/api?limit={limit}&offset={max(0,offset-limit)}'
-        if offset + limit <= article_docs_count:
-            next_url = f'/api?limit={limit}&offset={offset+limit}'
+    elapsed_time = current_datetime - last_insert_time
+    elapsed_time = elapsed_time.total_seconds() / 3600
 
-        return {
-            'prev_url': prev_url,
-            'next_url': next_url,
-            'articles': list(articles)
-        }
-        
-    @staticmethod
-    def get_last_insert_et_and_date(current_datetime):
-        record = article_collection.find_one({},sort=[('_id', pymongo.DESCENDING)])
-        if record is None:
-            return None, None
+    last_insert_date = last_insert_time.date()
 
-        last_insert_time = record.get('_id').generation_time
-        last_insert_time.replace(tzinfo=timezone.utc)
+    return elapsed_time, last_insert_date
 
-        elapsed_time = current_datetime - last_insert_time
-        elapsed_time = elapsed_time.total_seconds() / 3600
-
-        last_insert_date = last_insert_time.date()
-
-        return elapsed_time, last_insert_date
-
-    @staticmethod
-    def delete_all():
-        article_collection.delete_many({})
+def delete_all():
+    article_collection.delete_many({})

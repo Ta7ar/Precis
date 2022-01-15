@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, abort, Response
-from article import Article
+import article
 import scraper
 
 app = Flask(__name__)
@@ -7,14 +7,14 @@ app = Flask(__name__)
 @app.route("/", methods=['GET'])
 def index():
     scraper.scrape_articles()
-    articles = Article.get_all()
+    articles = article.get_all()
     return jsonify(articles)
 
 @app.route("/api",methods=['GET'])
 def get_articles_paginated():
     limit, offset = request.args.get('limit', 10), request.args.get('offset', 0)
     limit, offset = int(limit), int(offset)
-    data = Article.get(limit,offset)
+    data = article.get(limit,offset)
     if data is None:
         abort(Response('Offset value exceeds total number of articles available.', 404))     
     return jsonify(data)
