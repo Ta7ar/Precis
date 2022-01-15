@@ -44,7 +44,15 @@ class Article:
 
     @staticmethod
     def get_all():
-        articles = article_collection.find({},{'_id':False, '_v':False})
+        articles = article_collection.find({},{'_id':False, '_v':False}).sort('_id',pymongo.ASCENDING)
+        return list(articles)
+    
+    @staticmethod
+    def get(limit, offset):
+        if offset > article_collection.count_documents({}):
+            return None
+        starting_id = article_collection.find().sort('_id', pymongo.ASCENDING)[offset]['_id']
+        articles = article_collection.find({'_id': {'$gte': starting_id}}, {'_id': False}).sort('_id', pymongo.ASCENDING).limit(limit)
         return list(articles)
         
     @staticmethod
