@@ -49,11 +49,24 @@ class Article:
     
     @staticmethod
     def get(limit, offset):
-        if offset > article_collection.count_documents({}):
+        article_docs_count = article_collection.count_documents({})
+        if offset > article_docs_count:
             return None
         starting_id = article_collection.find().sort('_id', pymongo.ASCENDING)[offset]['_id']
         articles = article_collection.find({'_id': {'$gte': starting_id}}, {'_id': False}).sort('_id', pymongo.ASCENDING).limit(limit)
-        return list(articles)
+
+        prev_url = next_url = None
+
+        if offset != 0:
+            prev_url = f'/api?limit={limit}&offset={max(0,offset-limit)}'
+        if offset + limit <= article_docs_count:
+            next_url = f'/api?limit={limit}&offset={offset+limit}'
+
+        return {
+            'prev_url': prev_url,
+            'next_url': next_url,
+            'articles': list(articles)
+        }
         
     @staticmethod
     def get_last_insert_et_and_date(current_datetime):
