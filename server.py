@@ -1,13 +1,8 @@
-from flask import Flask, jsonify, request, abort, Response, send_from_directory
+from flask import Flask, jsonify, request, abort, Response, render_template
 import article
 import scraper
 
-app = Flask(__name__, static_folder='client/build', static_url_path='')
-
-@app.route("/", methods=['GET'])
-def index():
-    scraper.scrape_articles()
-    return send_from_directory(app.static_folder,'index.html')
+app = Flask(__name__, template_folder="client/build", static_folder="client/build/static")
 
 @app.route("/api",methods=['GET'])
 def get_articles_paginated():
@@ -17,6 +12,12 @@ def get_articles_paginated():
     if data is None:
         abort(Response('Offset value exceeds total number of articles available.', 404))     
     return jsonify(data)
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):
+    scraper.scrape_articles()
+    return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(host='localhost',port=8080,debug=True)
