@@ -17,12 +17,12 @@ const CustomNavbar = () => {
       light
       expand="sm"
       container="md"
-      style={{ marginBottom: "1rem" }}
+      style={{ marginBottom: "2rem" }}
     >
       <NavbarBrand href="/">Precis</NavbarBrand>
       <NavbarToggler id="navbar-collapse-toggler" />
       <UncontrolledCollapse navbar toggler="#navbar-collapse-toggler">
-        <Nav className="me-auto" navbar style={{ marginLeft: "auto" }}>
+        <Nav navbar style={{ marginLeft: "auto" }}>
           <NavItem>
             <NavLink href="/about">About</NavLink>
           </NavItem>
