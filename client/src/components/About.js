@@ -18,7 +18,7 @@ const About = () => {
         </p>
       </section>
       <br />
-      <section style={{ borderBottom: "1px dashed grey" }}>
+      <section>
         <h4>Contributing</h4>
         <p>
           Want to see articles from more publishers? Other ideas to improve the
