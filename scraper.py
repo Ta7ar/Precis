@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 
 class Scraper:
     def __init__(self,url) -> None:
-        self.publisher = self.__class__.__name__
         self.url = url
+        self.publisher = self.__class__.__name__
     
     @staticmethod
     def _generate_soup(url):

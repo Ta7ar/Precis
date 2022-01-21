@@ -76,4 +76,4 @@ def summarize(text: str) -> str:
     selected_sentences = _select_top_sentences(vt)
 
     summary = [corpus[i] for i in sorted(selected_sentences)]
-    return ''.join(summary)
+    return ' '.join(summary)
