@@ -40,10 +40,6 @@ def save(articles: List['Article']):
     articles = [article.__dict__ for article in articles]
     article_collection.insert_many(articles)
 
-def get_all():
-    articles = article_collection.find({},{'_id':False, '_v':False}).sort('_id',pymongo.ASCENDING)
-    return list(articles)
-
 def get(limit, offset):
     article_docs_count = article_collection.count_documents({})
     if offset > article_docs_count:
