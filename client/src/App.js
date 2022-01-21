@@ -2,6 +2,9 @@ import Navbar from "./components/Navbar";
 import About from "./components/About";
 import { Container } from "reactstrap";
 import { Route, Switch, Redirect } from "react-router-dom";
+import ArticleCollection from "./components/ArticleCollection";
+import DateDisplay from "./components/DateDisplay";
+
 function App() {
   return (
     <div className="App">
@@ -12,7 +15,8 @@ function App() {
             <About />
           </Route>
           <Route path="/" exact>
-            <div>Home</div>
+            <DateDisplay />
+            <ArticleCollection />
           </Route>
           <Route path="/">
             <Redirect to="/" />
