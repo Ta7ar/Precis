@@ -10,13 +10,7 @@ import {
 } from "reactstrap";
 
 const CustomNavbar = () => (
-  <Navbar
-    color="light"
-    light
-    expand="sm"
-    container="md"
-    style={{ marginBottom: "2rem" }}
-  >
+  <Navbar color="light" light expand="sm" container="md">
     <NavbarBrand href="/">Precis</NavbarBrand>
     <NavbarToggler id="navbar-collapse-toggler" />
     <UncontrolledCollapse navbar toggler="#navbar-collapse-toggler">

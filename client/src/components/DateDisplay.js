@@ -1,4 +1,5 @@
 import React from "react";
+import { Alert } from "reactstrap";
 
 const DateDisplay = () => {
   const monthNames = [
@@ -17,10 +18,13 @@ const DateDisplay = () => {
   ];
   const currentDate = new Date();
   return (
-    <div>
-      Showing articles for {monthNames[currentDate.getMonth()]}{" "}
-      {currentDate.getDate()} , {currentDate.getFullYear()}
-    </div>
+    <Alert color="secondary" style={{ marginTop: "1rem" }}>
+      Showing articles for{" "}
+      <span style={{ fontWeight: 600 }}>
+        {monthNames[currentDate.getMonth()]} {currentDate.getDate()} ,{" "}
+        {currentDate.getFullYear()}
+      </span>
+    </Alert>
   );
 };
 
