@@ -40,7 +40,7 @@ class CNBC(Scraper):
         homepage = Scraper._generate_soup(self.url)
         thumbnail_tags = homepage.find('div',attrs={'id':'homepage-riverPlus'}).find_all('div',attrs={'class':'RiverHeadline-headline RiverHeadline-hasThumbnail'})
         links = [thumbnail.find('a').attrs['href'] for thumbnail in thumbnail_tags]
-        links = [link for link in links if link != '/pro/']
+        links = {link for link in links if link != '/pro/'}
         return links
 
     def parse_link(self, link):
@@ -57,7 +57,7 @@ class CBS(Scraper):
     def get_links(self):
         homepage = Scraper._generate_soup(self.url)
         a_tags = homepage.find_all('a')
-        links = [tag.attrs['href'] for tag in a_tags if "https://www.cbsnews.com/news" in tag.attrs['href']]
+        links = {tag.attrs['href'] for tag in a_tags if "https://www.cbsnews.com/news" in tag.attrs['href']}
         return links
 
     def parse_link(self, link):
