@@ -23,7 +23,7 @@ class Scraper:
     def run(self, saved_links):
         links = self.get_links()
         links = [link for link in links if link not in saved_links]
-        links = links[:15] if len(links) > 15 else links
+        links = links[:10] if len(links) > 10 else links
 
         articles = []
         for link in links:

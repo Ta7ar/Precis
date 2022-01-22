@@ -1,18 +1,29 @@
+import math
 from flask import Flask, jsonify, request, abort, Response, render_template
 import article
 import scraper
 
+ARTICLES_LIMIT = 5
+
 app = Flask(__name__, template_folder="client/build", static_folder="client/build/static")
 
-@app.route("/api",methods=['GET'])
-def get_articles_paginated():
-    limit, offset = request.args.get('limit', 5), request.args.get('offset', 0)
-    limit, offset = int(limit), int(offset)
-    if offset == 0:
+@app.route("/api", defaults={'page':1})
+@app.route("/api/<int:page>",methods=['GET'])
+def get_articles_paginated(page):
+    if page < 1:
+        abort(Response('Page number must be a positive number.', 404))     
+    if page == 1:
         scraper.scrape_articles()
-    data = article.get(limit,offset)
-    if data is None:
-        abort(Response('Offset value exceeds total number of articles available.', 404))     
+    article_docs_count = article.count_docs()
+    offset = (page-1)*ARTICLES_LIMIT
+    if offset > article_docs_count:
+        abort(Response('Page does not exist.', 404))
+    articles = article.get(ARTICLES_LIMIT,offset)
+    total_page_count = math.ceil(article_docs_count/ARTICLES_LIMIT)
+    data = {
+        'articles': articles,
+        'pages': total_page_count
+    }
     return jsonify(data)
 
 @app.route('/', defaults={'path': ''})
