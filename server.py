@@ -7,7 +7,6 @@ ARTICLES_LIMIT = 5
 
 app = Flask(__name__, template_folder="client/build", static_folder="client/build/static")
 
-@app.route("/api", defaults={'page':1})
 @app.route("/api/<int:page>",methods=['GET'])
 def get_articles_paginated(page):
     if page < 1:
