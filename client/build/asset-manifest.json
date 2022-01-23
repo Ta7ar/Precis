@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/static/css/main.56e6221f.css",
+    "main.js": "/static/js/main.e51912a7.js",
+    "static/media/CNBC.svg": "/static/media/CNBC.3318ff8e87ae8eed0d95ed22471bb7da.svg",
+    "static/media/CBS News.svg": "/static/media/CBS News.5b38751ed8cae15e24fb6af4bdfd75b8.svg",
+    "index.html": "/index.html",
+    "main.56e6221f.css.map": "/static/css/main.56e6221f.css.map",
+    "main.e51912a7.js.map": "/static/js/main.e51912a7.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.56e6221f.css",
+    "static/js/main.e51912a7.js"
+  ]
+}
